@@ -25,7 +25,6 @@ export function createWorld(host:HTMLDivElement,onState:(s:WorldState)=>void,onI
  const pale=new THREE.MeshStandardMaterial({color:'#ffffff',map:hatch('#dedbd2',120),roughness:1});
  const graphite=new THREE.MeshStandardMaterial({color:'#ffffff',map:hatch('#343532',190),roughness:1});
  const road=new THREE.MeshStandardMaterial({color:'#ffffff',map:hatch('#d5d2c9',220),roughness:1});
- const accent=new THREE.MeshStandardMaterial({color:'#c7a04d',roughness:1});
  const edgeMat=new THREE.LineBasicMaterial({color:'#484740',transparent:true,opacity:.73});
  const obstacles:Obstacle[]=[];
  function mesh(geo:THREE.BufferGeometry,mat:THREE.Material,x=0,y=0,z=0,parent:THREE.Object3D=scene,outline=true){if(vector&&mat instanceof THREE.MeshStandardMaterial&&mat.map?.userData.base){mat.color.set(mat.map.userData.base);}const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(parent===scene&&y<=.1)m.renderOrder=-100;parent.add(m);if(outline){const e=new THREE.LineSegments(new THREE.EdgesGeometry(geo,32),edgeMat);e.renderOrder=m.renderOrder;m.add(e);}return m;}
