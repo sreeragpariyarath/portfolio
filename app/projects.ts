@@ -1,0 +1,27 @@
+export const PROJECTS = [
+  { id:'hupe', number:'01', title:'LearnWithHupe', place:'The learning house', type:'LEARNING PLATFORM', color:'#d3aa52', x:-9, z:0,
+    line:'Small learners. A surprisingly big engine.',
+    description:'A learning world for children aged 2–8, with a mobile app, educational games and a content management system. I built the backend and admin/CMS; the mobile app was built by a separate Flutter developer.',
+    role:'Backend & admin/CMS development', stack:['Node.js','Express','MongoDB','Redis','React','TypeScript'],
+    notes:[['One family, many little explorers','Session-based child profiles keep learning progress attached to the right child.'],['Purchases need a source of truth','Google Play and Apple server APIs verify subscriptions; notifications trigger a fresh check rather than deciding access.'],['Learning keeps going offline','Batched progress sync and downloadable content support children away from a reliable connection.']],
+    link:'https://play.google.com/store/apps/details?id=com.hupe.hupe_academy_app', linkLabel:'View on Google Play', secondary:'https://apps.apple.com/us/app/learn-with-hupe/id6760534126',secondaryLabel:'App Store', status:'MOBILE APP · LIVE' },
+  { id:'warox', number:'02', title:'Warox', place:'The game workshop', type:'GAME WEBSITE & CMS',color:'#9eaaa0',x:9,z:-9,
+    line:'Behind the adventure, another world to build.',
+    description:'A game website, community and shop with a CMS for the people running it. My work connects the public experience with the permissions, content and commerce behind it.',
+    role:'Website & RBAC admin backend',stack:['Next.js','Node.js','MongoDB','Redis','Stripe'],
+    notes:[['One world, many languages','A source-language content model and separate translations support a multilingual website.'],['A checkout is only half the story','Server-priced Stripe Checkout, verified webhooks and idempotent order handling keep payments separate from item grants.'],['Give the content team the controls','Roles, products, game assets and forum moderation are managed through the CMS.']],
+    link:null,linkLabel:null,secondary:null,secondaryLabel:null,status:'CLIENT WORK · CASE NOTES' },
+  { id:'erris',number:'03',title:'Erris',place:'The signal tower',type:'OPEN-SOURCE TOOLING',color:'#b9a8bd',x:-9,z:-15,
+    line:'Even when things break, the language should hold.',
+    description:'A TypeScript error architecture that gives backends one typed vocabulary for failure. A small, transport-neutral core connects error catalogs, validation adapters and safe HTTP responses.',
+    role:'Creator & maintainer',stack:['TypeScript','Node.js','Zod','Prisma','npm'],
+    notes:[['Name failures once','Typed error catalogs give application code a shared contract.'],['Translate at the boundary','Zod and Prisma adapters normalize library errors without coupling the core to a web framework.'],['Tell clients enough, safely','RFC 9457 Problem Details responses expose useful failure information without leaking internals.']],
+    link:'https://github.com/sreeragpariyarath/erris',linkLabel:'Explore the source',secondary:'https://www.npmjs.com/package/@erris/core',secondaryLabel:'npm package',status:'OPEN SOURCE · PUBLISHED' },
+  { id:'yexora',number:'04',title:'YEXORA',place:'The ideas studio',type:'INTERACTIVE WEBSITE',color:'#c89875',x:9,z:6,
+    line:'A services company, with a little more curiosity.',
+    description:'A freelance website for YEXORA IT Solutions. Interactive service hotspots, parallax and responsive layouts turn a list of technical services into an experience visitors can explore.',
+    role:'Freelance frontend development',stack:['Next.js','React','TypeScript','Tailwind','Framer Motion'],
+    notes:[['Explore, rather than scroll past','Clickable service hotspots reveal the details behind each offering.'],['Motion with a purpose','Parallax and transitions guide attention through the company’s services.'],['Make room for touch','Responsive layouts and tap zones adapt the interactive idea to smaller screens.']],
+    link:'https://yexoraitsolutions.com/',linkLabel:'Visit website',secondary:null,secondaryLabel:null,status:'FREELANCE · WEBSITE' }
+] as const;
+export type Project = typeof PROJECTS[number];
