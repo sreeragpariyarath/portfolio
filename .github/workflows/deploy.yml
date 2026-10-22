@@ -1,0 +1,93 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One production deployment at a time; a queued run waits instead of cancelling
+# a deployment that is already publishing.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  PAGES_PROJECT: sreerag
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy to Cloudflare Pages
+    needs: ci
+    # Only ever publish main, including manual dispatches.
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: ${{ steps.site.outputs.url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      # Deploy the exact export that passed the CI jobs, not a rebuild.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site
+          path: out
+      - name: Publish to Cloudflare Pages
+        id: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          pnpm exec wrangler pages deploy out \
+            --project-name "$PAGES_PROJECT" \
+            --branch main \
+            --commit-hash "$GITHUB_SHA" \
+            --commit-dirty=false | tee deploy.log
+          # URL of this exact deployment (<hash>.<project>.pages.dev).
+          url=$(grep -oE 'https://[a-z0-9.-]+\.pages\.dev' deploy.log | tail -1)
+          test -n "$url" || { echo "::error::No deployment URL in wrangler output"; exit 1; }
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Resolve production URL
+        id: site
+        env:
+          # Set the SITE_URL repository variable once a custom domain is live.
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: echo "url=${SITE_URL:-https://$PAGES_PROJECT.pages.dev}" >> "$GITHUB_OUTPUT"
+      - name: Smoke test deployment and production URL
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          SITE_URL: ${{ steps.site.outputs.url }}
+        run: |
+          fail() { echo "::error::$*"; exit 1; }
+          check() {
+            url="$1"
+            echo "Checking $url"
+            code=000
+            for i in 1 2 3 4 5 6; do
+              code=$(curl -sS -o page.html -D headers.txt -w '%{http_code}' "$url/" || true)
+              [ "$code" = "200" ] && break
+              sleep 10
+            done
+            [ "$code" = "200" ] || fail "$url returned HTTP $code"
+            grep -qi '<title>' page.html || fail "$url has no <title>"
+            grep -qi '_next/static' page.html || fail "$url does not look like the app"
+            grep -qi '^content-security-policy:' headers.txt || fail "$url is missing CSP"
+            grep -qi '^x-frame-options: *deny' headers.txt || fail "$url is missing X-Frame-Options"
+            # A real hashed asset must load with immutable caching.
+            asset=$(grep -oE '/_next/static/[^"]+\.js' page.html | head -1)
+            test -n "$asset" || fail "$url references no JS asset"
+            curl -sS -o /dev/null -D asset.txt -w '%{http_code}' "$url$asset" | grep -q '^200$' || fail "$url$asset did not return 200"
+            grep -qi '^cache-control:.*immutable' asset.txt || fail "$url$asset is not served immutable"
+          }
+          check "$DEPLOY_URL"
+          check "$SITE_URL"

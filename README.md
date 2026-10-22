@@ -1,10 +1,10 @@
 # A World in Progress
 
-A private, compact Next.js 16 / React 19 / TypeScript / Three.js portfolio for Sreerag Pariyarath. All 3D geometry and animation are procedural; no paid models or remote 3D assets are required.
+A compact Next.js 16 / React 19 / TypeScript / Three.js portfolio for Sreerag Pariyarath. All 3D geometry and animation are procedural; no paid models or remote 3D assets are required.
 
 ## Run
 
-Use the package manager declared in package.json. `pnpm dev` serves port 4173. `pnpm build` produces a static Next.js export in `out/`. Sites owns the private hosting policy; no client-side password or robots tag is used as access control.
+Use the package manager declared in package.json. `pnpm dev` serves port 4173. `pnpm build` produces a static Next.js export in `out/`. The site is public and has no access control.
 
 ## Play
 
@@ -26,3 +26,13 @@ Four landmarks represent LearnWithHupe, Warox, Erris, and YEXORA. Entering the i
 Run `pnpm test:movement` for normalization, run speed, collision sliding, boundaries, and proximity. `pnpm build` includes TypeScript validation. Browser QA uses the managed preview. This environment disables WebGL; the SVG fallback exercises the same scene, camera, movement, and project interactions. GPU-specific appearance and performance require a device with WebGL.
 
 Prototype scope: one small city; keyboard movement; four project stops; journal, map, maker note, and contact links. No combat, physics engine, external model rig, or content backend.
+
+## CI/CD
+
+GitHub Actions in `.github/workflows/`:
+
+- `ci.yml` runs on pull requests: typecheck, lint, movement tests, a production build (static export to `out/`, with a client JavaScript budget), and Playwright smoke tests for desktop and mobile against that export, served through the Cloudflare Pages runtime so `public/_headers` applies. The `CI gate` job is the one status check to require in branch protection.
+- `security.yml` runs `pnpm audit --prod` (blocks on high), CodeQL, and dependency review on pull requests, plus a weekly schedule.
+- `deploy.yml` runs on `main` and manual dispatch: it re-runs CI, publishes the tested `out/` to the Cloudflare Pages project `sreerag` with `wrangler pages deploy`, then smoke-tests the deployment and production URLs.
+
+Deploying needs the `CLOUDFLARE_API_TOKEN` (Cloudflare Pages: Edit only) and `CLOUDFLARE_ACCOUNT_ID` secrets in a `production` GitHub environment. Set the `SITE_URL` repository variable once a custom domain is live. To run the browser tests locally, build first (`pnpm build`), then `pnpm test:e2e`.
