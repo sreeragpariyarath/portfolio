@@ -1,0 +1,29 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # pnpm-workspace.yaml refuses releases younger than 7 days, so proposing
+    # them would only produce failing installs.
+    cooldown:
+      default-days: 7
+    groups:
+      framework:
+        patterns: ['next', 'react', 'react-dom', 'eslint-config-next', '@types/react*']
+      three:
+        patterns: ['three', '@types/three']
+      testing:
+        patterns: ['@playwright/test']
+      cloudflare:
+        patterns: ['wrangler', '@cloudflare/*']
+      minor-and-patch:
+        update-types: ['minor', 'patch']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
