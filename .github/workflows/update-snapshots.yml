@@ -1,0 +1,58 @@
+name: Update visual snapshots
+
+# Visual baselines must be created on Linux, because text and SVG render
+# differently on other systems. Run this from the Actions tab (workflow_dispatch),
+# or push a branch named snapshots/<anything>. It builds the site, regenerates
+# the baselines and the scene fingerprint and uploads them as an artifact: it
+# never commits, so a human reviews the images before they are added.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['snapshots/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: update-snapshots-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  update:
+    name: Regenerate baselines
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm run build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Regenerate visual baselines
+        run: pnpm exec playwright test visual.spec.ts --update-snapshots --reporter=line
+        env:
+          CI: 'true'
+          VISUAL_TESTS: '1'
+      - name: Record the scene fingerprint
+        run: pnpm exec playwright test scene-fingerprint.spec.ts --project=desktop --reporter=line 2>&1 | tee fingerprint.log
+        env:
+          CI: 'true'
+          RECORD_FINGERPRINT: '1'
+      - name: Summarise
+        run: |
+          grep FINGERPRINT fingerprint.log || echo "No fingerprint recorded (WebGL not available?)"
+          find tests/e2e -name '*.png' | wc -l
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: snapshots
+          path: |
+            tests/e2e/**/*.png
+            fingerprint.log
+          if-no-files-found: warn
+          retention-days: 7

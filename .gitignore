@@ -47,3 +47,10 @@ yarn-error.log*
 # Test output
 /playwright-report/
 /test-results/
+
+# Local-only visual baselines (the committed ones are created on Linux CI)
+/tests/e2e/*-snapshots/*-win32.png
+/tests/e2e/*-snapshots/*-darwin.png
+
+# This project uses pnpm
+package-lock.json
