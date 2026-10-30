@@ -14,7 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "test:movement": "node --experimental-strip-types --test tests/movement.test.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/movement.test.mjs",
+    "test": "node --experimental-strip-types --test \"tests/*.test.mjs\"",
     "test:e2e": "playwright test"
   },
   "dependencies": {
